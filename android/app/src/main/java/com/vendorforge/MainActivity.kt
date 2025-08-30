@@ -1,4 +1,4 @@
-package com.vendorforge
+package com.vendor.forge.app
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

@@ -1,4 +1,4 @@
-package com.vendorforge
+package com.vendor.forge.app
 
 import android.app.Application
 import com.facebook.react.PackageList
