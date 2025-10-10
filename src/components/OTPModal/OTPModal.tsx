@@ -154,7 +154,7 @@ export const OTPModal: React.FC<OTPModalProps> = ({
             await new Promise(resolve => setTimeout(resolve, 1500));
 
             onVerificationSuccess();
-            Alert.alert("Success", `${type === 'email' ? 'Email' : 'Phone'} verified successfully!`);
+            // Alert.alert("Success", `${type === 'email' ? 'Email' : 'Phone'} verified successfully!`);
 
         } catch (error) {
             console.error("OTP verification error:", error);
