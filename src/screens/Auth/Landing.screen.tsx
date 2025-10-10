@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, Alert, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { LandingCarousel } from '../../components/LandingCarousel/LandingCarousel';
 import { StyledButton } from '../../components/StyledButton/StyledButton';
-import { VendorForgeLogo } from '../../assets/logo/VendorForge';
+import { PrashiskhanLogo } from '../../assets/logo/VendorForge';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { authService } from '../../services/AuthService';
@@ -102,12 +102,11 @@ export const Landing: FC = () => {
 
             {/* Logo and Text Section */}
             <View style={styles.header}>
-                <VendorForgeLogo variant="default" size={64} />
+                <PrashiskhanLogo variant="default" size={74} />
                 <View style={styles.textWrapper}>
-                    <Text style={styles.title}>VendorForge</Text>
+                    <Text style={styles.title}>Prashiskshan</Text>
                     <Text style={styles.subtitle}>
-                        Join our vendor community to unlock exclusive benefits and
-                        opportunities.
+                        AI-driven Student Internship Portal connecting students, mentors, and recruiters.
                     </Text>
                 </View>
             </View>
