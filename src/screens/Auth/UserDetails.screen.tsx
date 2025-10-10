@@ -37,6 +37,7 @@ type RootStackParamList = {
             email?: string;
         };
     };
+    RoleSelection: undefined;
 };
 
 type UserDetailsScreenNavigationProp = NativeStackNavigationProp<
@@ -169,7 +170,7 @@ export const UserDetails: FC = () => {
             // Determine final auth method
             const finalAuthMethod = authMethod || inputType;
 
-            // Create user object
+            // Create user object (without logging in yet)
             const userData: User = {
                 id: userId,
                 firstName: firstName.trim(),
@@ -177,17 +178,14 @@ export const UserDetails: FC = () => {
                 email: needsEmail ? emailOrPhone.trim() : (prefilledData?.email || (inputType === "email" ? value : "")),
                 phone: needsPhone ? emailOrPhone.trim() : (inputType === "phone" ? value : undefined),
                 authMethod: finalAuthMethod as "email" | "phone" | "google" | "apple",
+                profileCompleted: false, // User still needs to complete role selection and profile setup
             };
 
-            // Store user data and mark as authenticated
+            // Store user data temporarily (not authenticated yet)
             await login(userData);
 
-            // Show success message
-            Alert.alert(
-                "Welcome!",
-                `Hello ${firstName}, your account has been created successfully.`,
-                [{ text: "OK" }]
-            );
+            // Navigate to role selection instead of completing authentication
+            navigation.navigate('RoleSelection');
 
         } catch (error) {
             console.error("Error creating user:", error);
@@ -254,7 +252,7 @@ export const UserDetails: FC = () => {
             // Simulate sending OTP
             await new Promise(resolve => setTimeout(resolve, 500));
             setShowEmailOtpModal(true);
-            Alert.alert("OTP Sent", `Verification code sent to ${emailOrPhone}`);
+            // Alert.alert("OTP Sent", `Verification code sent to ${emailOrPhone}`);
         } catch (error) {
             Alert.alert("Error", "Something went wrong. Please try again.");
         } finally {
@@ -271,7 +269,7 @@ export const UserDetails: FC = () => {
             // Simulate sending OTP
             await new Promise(resolve => setTimeout(resolve, 500));
             setShowPhoneOtpModal(true);
-            Alert.alert("OTP Sent", `Verification code sent to ${emailOrPhone}`);
+            // Alert.alert("OTP Sent", `Verification code sent to ${emailOrPhone}`);
         } catch (error) {
             Alert.alert("Error", "Something went wrong. Please try again.");
         } finally {
