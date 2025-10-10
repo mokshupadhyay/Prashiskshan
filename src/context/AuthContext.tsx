@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import EncryptedStorage from 'react-native-encrypted-storage';
 import { authService } from '../services/AuthService';
 
+export type UserRole = 'student' | 'mentor' | 'recruiter';
+
 export interface User {
     id: string;
     firstName: string;
@@ -9,6 +11,8 @@ export interface User {
     email: string;
     phone?: string;
     authMethod: 'email' | 'phone' | 'google' | 'apple';
+    role?: UserRole;
+    profileCompleted?: boolean;
 }
 
 interface AuthContextType {
@@ -38,7 +42,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    const isAuthenticated = user !== null;
+    const isAuthenticated = user !== null && user.profileCompleted === true;
 
     // Load user data from encrypted storage on app start
     useEffect(() => {
