@@ -545,7 +545,7 @@
 import React from 'react';
 import Svg, { Path, Rect, Defs, LinearGradient, Stop } from 'react-native-svg';
 
-export const VendorForgeLogo: React.FC<{ variant?: 'default' | 'white' | 'gradient' | 'colored', size?: number }> = ({
+export const PrashiskhanLogo: React.FC<{ variant?: 'default' | 'white' | 'gradient' | 'colored', size?: number }> = ({
   variant = 'default',
   size = 32,
 }) => {
@@ -576,29 +576,20 @@ export const VendorForgeLogo: React.FC<{ variant?: 'default' | 'white' | 'gradie
       )}
 
       {/* Background container */}
-      <Rect x="1" y="1" width="30" height="30" rx="16"
+      <Rect x="1" y="1" width="30" height="30" rx="30"
         fill={colors.bg}
         stroke={colors.border}
         strokeWidth={colors.border === 'none' ? 0 : 1}
       />
 
-      {/* VendorForge monogram - distinct, interconnected "V" + "F" */}
-      {/* Refined, professional path for "V" */}
+      {/* Clean "P" initial - modern and professional */}
       <Path
-        d="M7 8 L12 23 L16.5 10 L14.4 10 L12 20.5 L9.6 6 Z"
-        fill={colors.text}
-      />
-      {/* Refined, professional path for "F" */}
-      <Path
-        d="M2 10 H25 V11 H20.2 V16 H24.8 V15 H20.2 V22 H19 V10 Z"
-        fill={colors.text}
-      />
-      {/* Optional: subtle link line to suggest connection/integration */}
-      <Path
-        d="M14 15 L20 15"
-        stroke={variant === 'gradient' ? 'url(#bgGradient)' : '#60a5fa'}
-        strokeWidth={1}
-        opacity={1}
+        d="M 10 26 L 10 8 L 19 8 Q 22 8 22 12 Q 22 18 17 18 L 10 18"
+        fill="none"
+        stroke={colors.text}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </Svg>
   );
