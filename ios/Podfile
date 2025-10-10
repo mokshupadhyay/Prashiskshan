@@ -14,7 +14,7 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
-target 'VendorForge' do
+target 'Prashiskhan' do
   config = use_native_modules!
 
   # Disable New Architecture
