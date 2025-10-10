@@ -12,25 +12,30 @@ import React, { FC, useCallback, memo, useState, useRef, useEffect } from "react
 import { FlatList, View, Image, Dimensions, StyleSheet, ListRenderItem, Animated, Easing, AppState } from "react-native";
 import { useFocusEffect } from '@react-navigation/native';
 
-const Dashboard = require('../../assets/images/Dashboard.jpg');
-const Vendor = require('../../assets/images/Vendor.jpg');
-const Chat = require('../../assets/images/Chat.jpg');
-const Feedback = require('../../assets/images/Feedback.jpg');
-const Review = require('../../assets/images/ReviewVendor.jpg');
+const CompanyHiring = require('../../assets/images/company_hiring.webp');
+const RecruitersSearching = require('../../assets/images/Recruiters_searching.webp');
+const DashboardPeopleDigital = require('../../assets/images/Dashboard_people_digital.webp');
+const Searching = require('../../assets/images/searching.webp');
+const InternResume = require('../../assets/images/intern_resume.webp');
+const WeAreHiring = require('../../assets/images/we_are_hiring.webp');
+const MatchHive = require('../../assets/images/match_hive.webp');
+
 
 const { width, height } = Dimensions.get('window');
 
 const ITEM_SPACING = 20;
 const ITEM_WIDTH = width - ITEM_SPACING * 2;
-const ITEM_HEIGHT = height / 2;
+const ITEM_HEIGHT = 400;
 const SNAP_INTERVAL = ITEM_WIDTH + ITEM_SPACING;
 
 const CAROUSEL_DATA = [
-    { id: 1, image: Dashboard },
-    { id: 2, image: Vendor },
-    { id: 3, image: Chat },
-    { id: 4, image: Review },
-    { id: 5, image: Feedback }
+    { id: 3, image: DashboardPeopleDigital },
+    { id: 6, image: WeAreHiring },
+    { id: 5, image: InternResume },
+    { id: 4, image: Searching },
+    { id: 1, image: CompanyHiring },
+    { id: 2, image: RecruitersSearching },
+    { id: 7, image: MatchHive },
 ];
 
 const CarouselItem = memo<{ item: { id: number; image: any } }>(({ item }) => (
@@ -286,6 +291,7 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
         borderRadius: 14,
+        resizeMode: 'cover',
     },
     contentContainer: {
         paddingLeft: ITEM_SPACING,
