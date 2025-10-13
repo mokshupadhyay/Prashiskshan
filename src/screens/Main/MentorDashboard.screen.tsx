@@ -11,6 +11,11 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { MainStackParamList } from '../../../navigation/MainNavigator';
+
+type MentorDashboardNavigationProp = NativeStackNavigationProp<MainStackParamList, 'Dashboard'>;
 
 const { width } = Dimensions.get('window');
 
@@ -39,81 +44,138 @@ interface Student {
     status: 'active' | 'pending_review' | 'completed';
 }
 
-// Mock data for demonstration
-const mockStudents: Student[] = [
-    {
-        id: '1',
-        name: 'Arjun Sharma',
-        email: 'arjun.sharma@college.edu',
-        college: 'IIT Delhi',
-        course: 'Computer Science',
-        year: '3rd Year',
-        internship: {
-            title: 'Frontend Developer Intern',
-            company: 'TechStart Solutions',
-            startDate: '2024-01-15',
-            duration: '3 months',
-            progress: 75
+// Mock data for demonstration - students from same college as mentor
+const getMockStudentsForCollege = (mentorCollege?: string): Student[] => {
+    // Default college if none specified
+    const targetCollege = mentorCollege || 'IIT Delhi';
+
+    // Create students for the mentor's college
+    const allStudents: Student[] = [
+        {
+            id: '1',
+            name: 'Arjun Sharma',
+            email: 'arjun.sharma@iitd.ac.in',
+            college: targetCollege,
+            course: 'Computer Science Engineering',
+            year: '3rd Year',
+            internship: {
+                title: 'Frontend Developer Intern',
+                company: 'TechStart Solutions',
+                startDate: '2024-01-15',
+                duration: '3 months',
+                progress: 75
+            },
+            performance: {
+                attendance: 95,
+                tasksCompleted: 12,
+                totalTasks: 15,
+                rating: 4.5
+            },
+            lastActivity: '2 hours ago',
+            status: 'active'
         },
-        performance: {
-            attendance: 95,
-            tasksCompleted: 12,
-            totalTasks: 15,
-            rating: 4.5
+        {
+            id: '2',
+            name: 'Priya Patel',
+            email: 'priya.patel@iitd.ac.in',
+            college: targetCollege,
+            course: 'Information Technology',
+            year: '4th Year',
+            internship: {
+                title: 'Data Science Intern',
+                company: 'DataCorp Analytics',
+                startDate: '2024-02-01',
+                duration: '6 months',
+                progress: 60
+            },
+            performance: {
+                attendance: 88,
+                tasksCompleted: 8,
+                totalTasks: 12,
+                rating: 4.2
+            },
+            lastActivity: '1 day ago',
+            status: 'pending_review'
         },
-        lastActivity: '2 hours ago',
-        status: 'active'
-    },
-    {
-        id: '2',
-        name: 'Priya Patel',
-        email: 'priya.patel@college.edu',
-        college: 'BITS Pilani',
-        course: 'Information Technology',
-        year: '4th Year',
-        internship: {
-            title: 'Data Science Intern',
-            company: 'DataCorp Analytics',
-            startDate: '2024-02-01',
-            duration: '6 months',
-            progress: 60
+        {
+            id: '3',
+            name: 'Sneha Gupta',
+            email: 'sneha.gupta@iitd.ac.in',
+            college: targetCollege,
+            course: 'Mechanical Engineering',
+            year: '2nd Year',
+            internship: {
+                title: 'Design Engineer Intern',
+                company: 'AutoTech Corp',
+                startDate: '2024-01-20',
+                duration: '4 months',
+                progress: 45
+            },
+            performance: {
+                attendance: 90,
+                tasksCompleted: 5,
+                totalTasks: 10,
+                rating: 4.0
+            },
+            lastActivity: '3 hours ago',
+            status: 'active'
         },
-        performance: {
-            attendance: 88,
-            tasksCompleted: 8,
-            totalTasks: 12,
-            rating: 4.2
+        {
+            id: '4',
+            name: 'Rohit Kumar',
+            email: 'rohit.kumar@iitd.ac.in',
+            college: targetCollege,
+            course: 'Electrical Engineering',
+            year: '3rd Year',
+            internship: {
+                title: 'Software Engineer Intern',
+                company: 'Google',
+                startDate: '2024-01-10',
+                duration: '6 months',
+                progress: 80
+            },
+            performance: {
+                attendance: 92,
+                tasksCompleted: 15,
+                totalTasks: 18,
+                rating: 4.7
+            },
+            lastActivity: '5 hours ago',
+            status: 'active'
         },
-        lastActivity: '1 day ago',
-        status: 'pending_review'
-    },
-    {
-        id: '3',
-        name: 'Rahul Kumar',
-        email: 'rahul.kumar@college.edu',
-        college: 'NIT Trichy',
-        course: 'Electronics Engineering',
-        year: '3rd Year',
-        internship: {
-            title: 'Mobile App Developer',
-            company: 'AppVenture Inc',
-            startDate: '2023-11-15',
-            duration: '4 months',
-            progress: 100
-        },
-        performance: {
-            attendance: 92,
-            tasksCompleted: 20,
-            totalTasks: 20,
-            rating: 4.8
-        },
-        lastActivity: '1 week ago',
-        status: 'completed'
-    }
-];
+        // Add a completed internship student
+        {
+            id: '5',
+            name: 'Ananya Singh',
+            email: 'ananya.singh@iitd.ac.in',
+            college: targetCollege,
+            course: 'Computer Science Engineering',
+            year: '4th Year',
+            internship: {
+                title: 'Full Stack Developer Intern',
+                company: 'Microsoft',
+                startDate: '2023-10-15',
+                duration: '6 months',
+                progress: 100
+            },
+            performance: {
+                attendance: 96,
+                tasksCompleted: 25,
+                totalTasks: 25,
+                rating: 4.9
+            },
+            lastActivity: '1 week ago',
+            status: 'completed'
+        }
+    ];
+
+    // Return all students for the mentor's college
+    return allStudents;
+};
 
 export const MentorDashboard: FC = () => {
     const { user, logout } = useAuth();
+    const navigation = useNavigation<MentorDashboardNavigationProp>();
     const [students, setStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -127,7 +189,9 @@ export const MentorDashboard: FC = () => {
         try {
             // Simulate API call
             await new Promise(resolve => setTimeout(resolve, 1000));
-            setStudents(mockStudents);
+            // Load students from same college as mentor
+            const studentsFromSameCollege = getMockStudentsForCollege(user?.college);
+            setStudents(studentsFromSameCollege);
         } catch (error) {
             console.error('Error loading students:', error);
         } finally {
@@ -260,67 +324,89 @@ export const MentorDashboard: FC = () => {
                     <Text style={styles.welcomeText}>Welcome back,</Text>
                     <Text style={styles.userName}>Prof. {user?.firstName}! 👨‍🏫</Text>
                 </View>
-                <TouchableOpacity style={styles.profileButton} onPress={logout}>
-                    <Icon name="user-circle" size={32} color="#10b981" />
-                </TouchableOpacity>
-            </View>
-
-            {/* Stats Cards */}
-            <View style={styles.statsContainer} >
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-
-
-                >
-                    <View style={styles.statCard}>
-                        <Icon name="users" size={24} color="#10b981" />
-                        <Text style={styles.statNumber}>{activeStudents}</Text>
-                        <Text style={styles.statLabel}>Active Students</Text>
-                    </View>
-                    <View style={styles.statCard}>
-                        <Icon name="clock-o" size={24} color="#f59e0b" />
-                        <Text style={styles.statNumber}>{pendingReviews}</Text>
-                        <Text style={styles.statLabel}>Pending Reviews</Text>
-                    </View>
-                    <View style={styles.statCard}>
-                        <Icon name="check-circle" size={24} color="#6b7280" />
-                        <Text style={styles.statNumber}>{completedInternships}</Text>
-                        <Text style={styles.statLabel}>Completed</Text>
-                    </View>
-                    <View style={styles.statCard}>
-                        <Icon name="star" size={24} color="#f59e0b" />
-                        <Text style={styles.statNumber}>{averageRating}</Text>
-                        <Text style={styles.statLabel}>Avg Rating</Text>
-                    </View>
-                </ScrollView>
-            </View>
-
-            {/* Students List */}
-            <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Your Students</Text>
-                <TouchableOpacity>
-                    <Icon name="filter" size={24} color="#10b981" />
+                <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+                    <Icon name="sign-out" size={28} color="#ef4444" />
                 </TouchableOpacity>
             </View>
 
             <ScrollView
-                style={styles.studentsList}
+                style={styles.scrollContainer}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
                 }
                 showsVerticalScrollIndicator={false}
             >
-                {loading ? (
-                    <View style={styles.loadingContainer}>
-                        <ActivityIndicator size="large" color="#10b981" />
-                        <Text style={styles.loadingText}>Loading students...</Text>
-                    </View>
-                ) : (
-                    students.map((student) => (
-                        <StudentCard key={student.id} student={student} />
-                    ))
-                )}
+                {/* Stats Cards */}
+                <View style={styles.statsContainer}>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                    >
+                        <View style={styles.statCard}>
+                            <Icon name="users" size={24} color="#10b981" />
+                            <Text style={styles.statNumber}>{activeStudents}</Text>
+                            <Text style={styles.statLabel}>Active Students</Text>
+                        </View>
+                        <View style={styles.statCard}>
+                            <Icon name="clock-o" size={24} color="#f59e0b" />
+                            <Text style={styles.statNumber}>{pendingReviews}</Text>
+                            <Text style={styles.statLabel}>Pending Reviews</Text>
+                        </View>
+                        <View style={styles.statCard}>
+                            <Icon name="check-circle" size={24} color="#6b7280" />
+                            <Text style={styles.statNumber}>{completedInternships}</Text>
+                            <Text style={styles.statLabel}>Completed</Text>
+                        </View>
+                        <View style={styles.statCard}>
+                            <Icon name="star" size={24} color="#f59e0b" />
+                            <Text style={styles.statNumber}>{averageRating}</Text>
+                            <Text style={styles.statLabel}>Avg Rating</Text>
+                        </View>
+                    </ScrollView>
+                </View>
+
+                {/* Quick Actions */}
+                <View style={styles.quickActions}>
+                    <TouchableOpacity
+                        style={styles.quickActionButton}
+                        onPress={() => navigation.navigate('AcademicCredits')}
+                    >
+                        <Icon name="graduation-cap" size={24} color="#10b981" />
+                        <Text style={styles.quickActionText}>Credits</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.quickActionButton}
+                        onPress={() => navigation.navigate('AttendanceTracking')}
+                    >
+                        <Icon name="calendar-check-o" size={24} color="#3b82f6" />
+                        <Text style={styles.quickActionText}>Attendance</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.quickActionButton}>
+                        <Icon name="comments-o" size={24} color="#f59e0b" />
+                        <Text style={styles.quickActionText}>Messages</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Students List */}
+                <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>Your Students ({user?.college || 'Your College'})</Text>
+                    <TouchableOpacity>
+                        <Icon name="filter" size={24} color="#10b981" />
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.studentsContainer}>
+                    {loading ? (
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator size="large" color="#10b981" />
+                            <Text style={styles.loadingText}>Loading students...</Text>
+                        </View>
+                    ) : (
+                        students.map((student) => (
+                            <StudentCard key={student.id} student={student} />
+                        ))
+                    )}
+                </View>
                 <View style={styles.bottomPadding} />
             </ScrollView>
         </View>
@@ -353,8 +439,12 @@ const styles = StyleSheet.create({
         color: '#1e293b',
         marginTop: 4,
     },
-    profileButton: {
-        padding: 4,
+    logoutButton: {
+        padding: 8,
+        borderRadius: 8,
+        backgroundColor: '#fef2f2',
+        borderWidth: 1,
+        borderColor: '#fee2e2',
     },
     statsContainer: {
         flexDirection: 'row',
@@ -400,8 +490,10 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: '#1e293b',
     },
-    studentsList: {
+    scrollContainer: {
         flex: 1,
+    },
+    studentsContainer: {
         paddingHorizontal: 20,
     },
     studentCard: {
@@ -578,5 +670,29 @@ const styles = StyleSheet.create({
     },
     bottomPadding: {
         height: 20,
+    },
+    quickActions: {
+        flexDirection: 'row',
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        gap: 12,
+    },
+    quickActionButton: {
+        flex: 1,
+        backgroundColor: '#fff',
+        padding: 16,
+        borderRadius: 12,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        elevation: 2,
+        gap: 8,
+    },
+    quickActionText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#1e293b',
     },
 });
