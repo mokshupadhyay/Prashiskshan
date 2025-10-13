@@ -9,6 +9,8 @@ import {
     TextInput,
     KeyboardAvoidingView,
     Platform,
+    PermissionsAndroid,
+    NativeModules,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
@@ -16,6 +18,10 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthContext';
 import { StyledInput } from '../../components/StyledInput/StyledInput';
 import { StyledButton } from '../../components/StyledButton/StyledButton';
+import RNFS from 'react-native-fs';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const { DocumentPickerModule } = NativeModules;
 
 type RootStackParamList = {
     StudentProfileSetup: undefined;
@@ -104,6 +110,9 @@ export const StudentProfileSetup: FC = () => {
     const [skills, setSkills] = useState<SkillItem[]>([]);
     const [selectedCareerGoals, setSelectedCareerGoals] = useState<string[]>([]);
     const [bio, setBio] = useState('');
+    const [resumeUploaded, setResumeUploaded] = useState(false);
+    const [resumeFileName, setResumeFileName] = useState('');
+    const [resumeFilePath, setResumeFilePath] = useState(''); // Store the actual file path
     const [loading, setLoading] = useState(false);
     const [showYearPicker, setShowYearPicker] = useState(false);
     const [showLocationPicker, setShowLocationPicker] = useState(false);
@@ -173,6 +182,126 @@ export const StudentProfileSetup: FC = () => {
         return null;
     };
 
+    const requestStoragePermission = async () => {
+        if (Platform.OS === 'android') {
+            try {
+                // Request multiple permissions for image picker and file access
+                const permissions = [
+                    PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+                    PermissionsAndroid.PERMISSIONS.CAMERA,
+                ];
+
+                // For Android 13+ (API level 33+), we need different permissions
+                if (Platform.Version >= 33) {
+                    permissions.push(PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES);
+                }
+
+                const granted = await PermissionsAndroid.requestMultiple(permissions);
+
+                console.log('Permission results:', granted);
+
+                // Check if all required permissions are granted
+                const allPermissionsGranted = Object.values(granted).every(
+                    permission => permission === PermissionsAndroid.RESULTS.GRANTED
+                );
+
+                return allPermissionsGranted;
+            } catch (err) {
+                console.warn('Permission request error:', err);
+                return false;
+            }
+        }
+        return true; // iOS doesn't need runtime permission for image picker
+    };
+
+    const handleResumeUpload = async () => {
+        try {
+            console.log('=== STARTING STUDENT PROFILE RESUME UPLOAD ===');
+
+            // Request storage permission on Android
+            const hasPermission = await requestStoragePermission();
+            console.log('Storage permission granted:', hasPermission);
+
+            console.log('Opening PDF picker...');
+
+            // Use our custom document picker for PDF files
+            const result = await DocumentPickerModule.pickDocument();
+
+            console.log('Selected file details:', result);
+
+            // Check file size (5MB limit)
+            if (result.size && result.size > 5 * 1024 * 1024) {
+                Alert.alert('File Too Large', 'Please select a PDF file smaller than 5MB');
+                return;
+            }
+
+            // Create a unique filename
+            const timestamp = new Date().getTime();
+            const fileExtension = result.name?.split('.').pop() || 'pdf';
+            const newFileName = `resume_${timestamp}.${fileExtension}`;
+
+            // Define the destination path in the app's document directory
+            const destPath = `${RNFS.DocumentDirectoryPath}/${newFileName}`;
+
+            console.log('File copy details:', {
+                from: result.uri,
+                to: destPath,
+                originalName: result.name,
+                newName: newFileName
+            });
+
+            // Copy the file to app's document directory
+            console.log('Starting file copy...');
+            await RNFS.copyFile(result.uri, destPath);
+            console.log('File copy completed');
+
+            // Verify file exists
+            const fileExists = await RNFS.exists(destPath);
+            console.log('File exists after copy:', fileExists);
+
+            if (!fileExists) {
+                throw new Error('File copy verification failed - file does not exist at destination');
+            }
+
+            // Get file stats
+            const fileStats = await RNFS.stat(destPath);
+            console.log('Copied file stats:', fileStats);
+
+            // Save PDF info to AsyncStorage for persistence
+            const pdfInfo = {
+                name: result.name || newFileName,
+                path: destPath,
+                size: result.size || 0,
+                uploadDate: new Date().toISOString(),
+            };
+
+            const existingPdfs = await AsyncStorage.getItem('uploadedPdfs');
+            const pdfs = existingPdfs ? JSON.parse(existingPdfs) : [];
+            pdfs.push(pdfInfo);
+            await AsyncStorage.setItem('uploadedPdfs', JSON.stringify(pdfs));
+
+            setResumeUploaded(true);
+            setResumeFileName(result.name || 'Unknown');
+            setResumeFilePath(destPath);
+
+            Alert.alert('Success', `Resume "${result.name}" uploaded successfully!\n\nFile saved to: ${newFileName}`);
+            console.log('=== STUDENT PROFILE RESUME UPLOAD COMPLETED SUCCESSFULLY ===');
+
+        } catch (error) {
+            if (error.code === 'DOCUMENT_PICKER_CANCELLED') {
+                console.log('User cancelled document picker');
+                return;
+            }
+
+            console.error('=== STUDENT PROFILE RESUME UPLOAD ERROR ===');
+            console.error('Error details:', error);
+            Alert.alert(
+                'Upload Failed',
+                `Failed to upload resume. Please try again.\n\nError: ${(error as Error).message || 'Unknown error'}`
+            );
+        }
+    };
+
     const handleSubmit = async () => {
         const error = validateForm();
         if (error) {
@@ -189,8 +318,15 @@ export const StudentProfileSetup: FC = () => {
             await updateUser({
                 role: 'student',
                 profileCompleted: true,
-                // Additional student-specific data would be stored here
-                // In a real app, this would be sent to backend
+                college: college.trim(),
+                course: course.trim(),
+                year: year,
+                cgpa: parseFloat(cgpa),
+                skills: skills.map(s => s.name),
+                careerGoals: selectedCareerGoals,
+                bio: bio.trim(),
+                location: location,
+                resumeUrl: resumeUploaded ? resumeFilePath : undefined, // Store the full file path
             });
 
             Alert.alert(
@@ -582,6 +718,41 @@ export const StudentProfileSetup: FC = () => {
                         />
                         <Text style={styles.characterCount}>{bio.length}/500</Text>
                     </View>
+
+                    {/* Resume Upload Section */}
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>Resume Upload</Text>
+                        <Text style={styles.sectionSubtitle}>
+                            Upload your resume to showcase your experience and skills to potential employers
+                        </Text>
+
+                        <TouchableOpacity
+                            style={[styles.resumeUploadButton, resumeUploaded && styles.resumeUploadedButton]}
+                            onPress={handleResumeUpload}
+                        >
+                            <Icon
+                                name={resumeUploaded ? "check-circle" : "upload"}
+                                size={24}
+                                color={resumeUploaded ? "#10b981" : "#3b82f6"}
+                            />
+                            <View style={styles.resumeUploadContent}>
+                                <Text style={[styles.resumeUploadTitle, resumeUploaded && styles.resumeUploadedTitle]}>
+                                    {resumeUploaded ? "Resume Uploaded" : "Upload Resume"}
+                                </Text>
+                                <Text style={styles.resumeUploadSubtitle}>
+                                    {resumeUploaded ? resumeFileName : "PDF, DOC, DOCX (Max 5MB)"}
+                                </Text>
+                            </View>
+                            {resumeUploaded && (
+                                <TouchableOpacity
+                                    style={styles.resumeChangeButton}
+                                    onPress={handleResumeUpload}
+                                >
+                                    <Text style={styles.resumeChangeText}>Change</Text>
+                                </TouchableOpacity>
+                            )}
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </ScrollView>
 
@@ -872,6 +1043,49 @@ const styles = StyleSheet.create({
         color: '#9ca3af',
         textAlign: 'right',
         marginTop: 8,
+    },
+    resumeUploadButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        borderWidth: 2,
+        borderColor: '#e2e8f0',
+        borderStyle: 'dashed',
+        borderRadius: 12,
+        padding: 20,
+        gap: 16,
+    },
+    resumeUploadedButton: {
+        borderColor: '#10b981',
+        borderStyle: 'solid',
+        backgroundColor: '#f0fdf4',
+    },
+    resumeUploadContent: {
+        flex: 1,
+    },
+    resumeUploadTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#374151',
+        marginBottom: 4,
+    },
+    resumeUploadedTitle: {
+        color: '#10b981',
+    },
+    resumeUploadSubtitle: {
+        fontSize: 14,
+        color: '#9ca3af',
+    },
+    resumeChangeButton: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        backgroundColor: '#3b82f6',
+        borderRadius: 6,
+    },
+    resumeChangeText: {
+        fontSize: 12,
+        fontWeight: '500',
+        color: '#fff',
     },
     footer: {
         position: 'absolute',
