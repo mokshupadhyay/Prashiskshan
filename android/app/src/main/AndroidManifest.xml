@@ -1,13 +1,51 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+  <!-- ✅ Internet access for APIs or PDF viewer -->
   <uses-permission android:name="android.permission.INTERNET" />
 
-  <application android:name=".MainApplication" android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:allowBackup="false" android:theme="@style/AppTheme" android:supportsRtl="true">
+  <!-- ✅ Camera (if used elsewhere in the app) -->
+  <uses-permission android:name="android.permission.CAMERA" />
+
+  <!-- ✅ External storage read access (for Android < 13) -->
+  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+
+  <!-- ✅ For Android 13+ separate media permissions -->
+  <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+  <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+  <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+
+  <!-- ✅ Document access for file picker -->
+  <uses-permission android:name="android.permission.READ_MEDIA_DOCUMENTS" />
+
+  <!-- ✅ Query all packages (for file picker apps) -->
+  <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+
+  <queries>
+    <!-- Query for document/PDF apps -->
+    <intent>
+      <action android:name="android.intent.action.GET_CONTENT" />
+      <data android:mimeType="application/pdf" />
+    </intent>
+    <intent>
+      <action android:name="android.intent.action.OPEN_DOCUMENT" />
+      <data android:mimeType="application/pdf" />
+    </intent>
+    <intent>
+      <action android:name="android.intent.action.OPEN_DOCUMENT" />
+      <data android:mimeType="*/*" />
+    </intent>
+  </queries>
+
+  <application android:name=".MainApplication" android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:allowBackup="false" android:theme="@style/AppTheme" android:supportsRtl="true" android:requestLegacyExternalStorage="true">
+
     <activity android:name=".MainActivity" android:label="@string/app_name" android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode" android:launchMode="singleTask" android:windowSoftInputMode="adjustResize" android:exported="true">
+
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.LAUNCHER" />
       </intent-filter>
+
     </activity>
+
   </application>
 </manifest>
