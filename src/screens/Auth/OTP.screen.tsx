@@ -255,6 +255,9 @@ export const OTP: FC = () => {
                                     />
                                 ))}
                             </View>
+                            <View >
+                                <Text style={{ textAlign: 'center', marginTop: 8, color: '#666', fontSize: 12 }}>Enter 0000 to verify</Text>
+                            </View>
 
                             {/* Resend Section */}
                             <View style={styles.resendContainer}>
