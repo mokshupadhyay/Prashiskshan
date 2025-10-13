@@ -8,9 +8,15 @@ import {
     RefreshControl,
     Dimensions,
     ActivityIndicator,
+    Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { MainStackParamList } from '../../../navigation/MainNavigator';
+
+type RecruiterDashboardNavigationProp = NativeStackNavigationProp<MainStackParamList, 'Dashboard'>;
 
 const { width } = Dimensions.get('window');
 
@@ -111,6 +117,7 @@ const mockCandidates: CandidateMatch[] = [
 
 export const RecruiterDashboard: FC = () => {
     const { user, logout } = useAuth();
+    const navigation = useNavigation<RecruiterDashboardNavigationProp>();
     const [candidates, setCandidates] = useState<CandidateMatch[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -165,6 +172,34 @@ export const RecruiterDashboard: FC = () => {
             case 'hired': return 'Hired';
             case 'rejected': return 'Rejected';
             default: return 'Unknown';
+        }
+    };
+
+    const handleCandidateAction = async (candidateId: string, action: 'shortlist' | 'reject', candidateName: string) => {
+        try {
+            setLoading(true);
+
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // Update candidate status
+            setCandidates(prev => prev.map(candidate =>
+                candidate.id === candidateId
+                    ? { ...candidate, status: action === 'shortlist' ? 'shortlisted' : 'rejected' }
+                    : candidate
+            ));
+
+            const actionText = action === 'shortlist' ? 'shortlisted' : 'rejected';
+            Alert.alert(
+                'Action Completed',
+                `${candidateName} has been ${actionText} successfully.`,
+                [{ text: 'OK' }]
+            );
+        } catch (error) {
+            console.error(`Error ${action}ing candidate:`, error);
+            Alert.alert('Error', `Failed to ${action} candidate. Please try again.`);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -262,13 +297,33 @@ export const RecruiterDashboard: FC = () => {
             </View>
 
             <View style={styles.cardActions}>
-                <TouchableOpacity style={[styles.actionButton, styles.rejectButton]}>
+                <TouchableOpacity
+                    style={[styles.actionButton, styles.rejectButton]}
+                    onPress={() => handleCandidateAction(candidate.id, 'reject', candidate.name)}
+                    disabled={candidate.status === 'rejected' || candidate.status === 'shortlisted'}
+                >
                     <Icon name="times" size={16} color="#ef4444" />
-                    <Text style={[styles.actionButtonText, { color: '#ef4444' }]}>Reject</Text>
+                    <Text style={[styles.actionButtonText, { color: '#ef4444' }]}>
+                        {candidate.status === 'rejected' ? 'Rejected' : 'Reject'}
+                    </Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.actionButton, styles.shortlistButton]}>
-                    <Icon name="star" size={16} color="#fff" />
-                    <Text style={[styles.actionButtonText, { color: '#fff' }]}>Shortlist</Text>
+                <TouchableOpacity
+                    style={[
+                        styles.actionButton,
+                        styles.shortlistButton,
+                        candidate.status === 'shortlisted' && styles.shortlistedButton
+                    ]}
+                    onPress={() => handleCandidateAction(candidate.id, 'shortlist', candidate.name)}
+                    disabled={candidate.status === 'rejected' || candidate.status === 'shortlisted'}
+                >
+                    <Icon
+                        name={candidate.status === 'shortlisted' ? 'check' : 'star'}
+                        size={16}
+                        color="#fff"
+                    />
+                    <Text style={[styles.actionButtonText, { color: '#fff' }]}>
+                        {candidate.status === 'shortlisted' ? 'Shortlisted' : 'Shortlist'}
+                    </Text>
                 </TouchableOpacity>
             </View>
         </TouchableOpacity>
@@ -310,65 +365,92 @@ export const RecruiterDashboard: FC = () => {
                     <Text style={styles.welcomeText}>Welcome back,</Text>
                     <Text style={styles.userName}>{user?.firstName}! 💼</Text>
                 </View>
-                <TouchableOpacity style={styles.profileButton} onPress={logout}>
-                    <Icon name="user-circle" size={32} color="#8b5cf6" />
-                </TouchableOpacity>
-            </View>
-
-            {/* Stats Cards */}
-            <View style={styles.statsContainer} >
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                >
-                    <View style={styles.statCard}>
-                        <Icon name="plus-circle" size={24} color="#3b82f6" />
-                        <Text style={styles.statNumber}>{newApplications}</Text>
-                        <Text style={styles.statLabel}>New Applications</Text>
-                    </View>
-                    <View style={styles.statCard}>
-                        <Icon name="star" size={24} color="#10b981" />
-                        <Text style={styles.statNumber}>{shortlistedCandidates}</Text>
-                        <Text style={styles.statLabel}>Shortlisted</Text>
-                    </View>
-                    <View style={styles.statCard}>
-                        <Icon name="calendar" size={24} color="#8b5cf6" />
-                        <Text style={styles.statNumber}>{interviewsScheduled}</Text>
-                        <Text style={styles.statLabel}>Interviews</Text>
-                    </View>
-                    <View style={styles.statCard}>
-                        <Icon name="line-chart" size={24} color="#f59e0b" />
-                        <Text style={styles.statNumber}>{averageMatchScore}%</Text>
-                        <Text style={styles.statLabel}>Avg Match</Text>
-                    </View>
-                </ScrollView>
-            </View>
-
-            {/* Candidates List */}
-            <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Top Matched Candidates</Text>
-                <TouchableOpacity onPress={() => loadCandidates(true)}>
-                    <Icon name="refresh" size={24} color="#8b5cf6" />
+                <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+                    <Icon name="sign-out" size={28} color="#ef4444" />
                 </TouchableOpacity>
             </View>
 
             <ScrollView
-                style={styles.candidatesList}
+                style={styles.scrollContainer}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
                 }
                 showsVerticalScrollIndicator={false}
             >
-                {loading ? (
-                    <View style={styles.loadingContainer}>
-                        <ActivityIndicator size="large" color="#8b5cf6" />
-                        <Text style={styles.loadingText}>Loading candidates...</Text>
-                    </View>
-                ) : (
-                    candidates.map((candidate) => (
-                        <CandidateCard key={candidate.id} candidate={candidate} />
-                    ))
-                )}
+                {/* Stats Cards */}
+                <View style={styles.statsContainer}>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                    >
+                        <View style={styles.statCard}>
+                            <Icon name="plus-circle" size={24} color="#3b82f6" />
+                            <Text style={styles.statNumber}>{newApplications}</Text>
+                            <Text style={styles.statLabel}>New Applications</Text>
+                        </View>
+                        <View style={styles.statCard}>
+                            <Icon name="star" size={24} color="#10b981" />
+                            <Text style={styles.statNumber}>{shortlistedCandidates}</Text>
+                            <Text style={styles.statLabel}>Shortlisted</Text>
+                        </View>
+                        <View style={styles.statCard}>
+                            <Icon name="calendar" size={24} color="#8b5cf6" />
+                            <Text style={styles.statNumber}>{interviewsScheduled}</Text>
+                            <Text style={styles.statLabel}>Interviews</Text>
+                        </View>
+                        <View style={styles.statCard}>
+                            <Icon name="line-chart" size={24} color="#f59e0b" />
+                            <Text style={styles.statNumber}>{averageMatchScore}%</Text>
+                            <Text style={styles.statLabel}>Avg Match</Text>
+                        </View>
+                    </ScrollView>
+                </View>
+
+                {/* Quick Actions */}
+                <View style={styles.quickActions}>
+                    <TouchableOpacity
+                        style={styles.quickActionButton}
+                        onPress={() => navigation.navigate('AttendanceTracking')}
+                    >
+                        <Icon name="calendar-check-o" size={24} color="#8b5cf6" />
+                        <Text style={styles.quickActionText}>Attendance</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.quickActionButton}
+                        onPress={() => navigation.navigate('Reports')}
+                    >
+                        <Icon name="file-text-o" size={24} color="#10b981" />
+                        <Text style={styles.quickActionText}>Reports</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.quickActionButton}
+                        onPress={() => navigation.navigate('Interviews')}
+                    >
+                        <Icon name="users" size={24} color="#f59e0b" />
+                        <Text style={styles.quickActionText}>Interviews</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Candidates List */}
+                <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>Top Matched Candidates</Text>
+                    <TouchableOpacity onPress={() => loadCandidates(true)}>
+                        <Icon name="refresh" size={24} color="#8b5cf6" />
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.candidatesContainer}>
+                    {loading ? (
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator size="large" color="#8b5cf6" />
+                            <Text style={styles.loadingText}>Loading candidates...</Text>
+                        </View>
+                    ) : (
+                        candidates.map((candidate) => (
+                            <CandidateCard key={candidate.id} candidate={candidate} />
+                        ))
+                    )}
+                </View>
                 <View style={styles.bottomPadding} />
             </ScrollView>
         </View>
@@ -401,8 +483,12 @@ const styles = StyleSheet.create({
         color: '#1e293b',
         marginTop: 4,
     },
-    profileButton: {
-        padding: 4,
+    logoutButton: {
+        padding: 8,
+        borderRadius: 8,
+        backgroundColor: '#fef2f2',
+        borderWidth: 1,
+        borderColor: '#fee2e2',
     },
     statsContainer: {
         flexDirection: 'row',
@@ -448,8 +534,10 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: '#1e293b',
     },
-    candidatesList: {
+    scrollContainer: {
         flex: 1,
+    },
+    candidatesContainer: {
         paddingHorizontal: 20,
     },
     candidateCard: {
@@ -644,6 +732,9 @@ const styles = StyleSheet.create({
     shortlistButton: {
         backgroundColor: '#8b5cf6',
     },
+    shortlistedButton: {
+        backgroundColor: '#10b981',
+    },
     actionButtonText: {
         fontSize: 14,
         fontWeight: '600',
@@ -695,5 +786,29 @@ const styles = StyleSheet.create({
     },
     bottomPadding: {
         height: 20,
+    },
+    quickActions: {
+        flexDirection: 'row',
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        gap: 12,
+    },
+    quickActionButton: {
+        flex: 1,
+        backgroundColor: '#fff',
+        padding: 16,
+        borderRadius: 12,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        elevation: 2,
+        gap: 8,
+    },
+    quickActionText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#1e293b',
     },
 });
