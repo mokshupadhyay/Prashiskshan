@@ -13,6 +13,32 @@ export interface User {
     authMethod: 'email' | 'phone' | 'google' | 'apple';
     role?: UserRole;
     profileCompleted?: boolean;
+    // Profile specific data
+    college?: string;
+    course?: string;
+    year?: string;
+    cgpa?: number;
+    skills?: string[];
+    careerGoals?: string[];
+    bio?: string;
+    location?: string;
+    resumeUrl?: string; // Path to uploaded resume PDF
+    // Mentor specific
+    designation?: string;
+    organization?: string;
+    experience?: string;
+    expertise?: string[];
+    achievements?: string;
+    linkedIn?: string;
+    availableHours?: string;
+    // Recruiter specific
+    companyName?: string;
+    companyType?: string;
+    industry?: string;
+    companySize?: string;
+    website?: string;
+    description?: string;
+    internshipTypes?: string[];
 }
 
 interface AuthContextType {
