@@ -266,6 +266,10 @@ export const OTPModal: React.FC<OTPModalProps> = ({
                                         ))}
                                     </View>
 
+                                    <View >
+                                        <Text style={{ textAlign: 'center', marginTop: 8, color: '#666', fontSize: 12 }}>Enter 0000 to verify</Text>
+                                    </View>
+
                                     {/* Resend Section */}
                                     <View style={styles.resendContainer}>
                                         <Text style={styles.resendText}>Didn't receive the code? </Text>
