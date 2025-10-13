@@ -62,6 +62,7 @@ export const MentorProfileSetup: FC = () => {
     const [lastName, setLastName] = useState(user?.lastName || '');
     const [email, setEmail] = useState(user?.email || '');
     const [phone, setPhone] = useState(user?.phone || '');
+    const [college, setCollege] = useState('');
     const [designation, setDesignation] = useState('');
     const [organization, setOrganization] = useState('');
     const [experience, setExperience] = useState('');
@@ -74,6 +75,7 @@ export const MentorProfileSetup: FC = () => {
     const [expertiseSearchText, setExpertiseSearchText] = useState('');
 
     // Refs
+    const collegeRef = useRef<TextInput>(null);
     const designationRef = useRef<TextInput>(null);
     const organizationRef = useRef<TextInput>(null);
     const bioRef = useRef<TextInput>(null);
@@ -98,6 +100,7 @@ export const MentorProfileSetup: FC = () => {
         if (!firstName.trim()) return 'First name is required';
         if (!lastName.trim()) return 'Last name is required';
         if (!email.trim()) return 'Email is required';
+        if (!college.trim()) return 'College/Institution is required';
         if (!designation.trim()) return 'Designation is required';
         if (!organization.trim()) return 'Organization is required';
         if (!experience) return 'Experience level is required';
@@ -128,7 +131,15 @@ export const MentorProfileSetup: FC = () => {
             await updateUser({
                 role: 'mentor',
                 profileCompleted: true,
-                // Additional mentor-specific data would be stored here
+                college: college.trim(),
+                designation: designation.trim(),
+                organization: organization.trim(),
+                experience: experience,
+                expertise: selectedExpertise,
+                bio: bio.trim(),
+                achievements: achievements.trim(),
+                linkedIn: linkedIn.trim(),
+                availableHours: availableHours.trim(),
             });
 
             Alert.alert(
@@ -222,6 +233,20 @@ export const MentorProfileSetup: FC = () => {
                     {/* Professional Information */}
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Professional Information</Text>
+
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>College/Institution *</Text>
+                            <StyledInput
+                                ref={collegeRef}
+                                placeholder="e.g., IIT Delhi, MIT, Stanford University"
+                                value={college}
+                                onChangeText={setCollege}
+                                variant="white"
+                                fullWidth
+                                returnKeyType="next"
+                                onSubmitEditing={() => designationRef.current?.focus()}
+                            />
+                        </View>
 
                         <View style={styles.inputGroup}>
                             <Text style={styles.label}>Designation/Title *</Text>
