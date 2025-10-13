@@ -8,9 +8,15 @@ import {
     RefreshControl,
     Dimensions,
     ActivityIndicator,
+    Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { MainStackParamList } from '../../../navigation/MainNavigator';
+
+type StudentDashboardNavigationProp = NativeStackNavigationProp<MainStackParamList, 'Dashboard'>;
 
 const { width } = Dimensions.get('window');
 
@@ -91,10 +97,12 @@ const mockInternships: InternshipMatch[] = [
 
 export const StudentDashboard: FC = () => {
     const { user, logout } = useAuth();
+    const navigation = useNavigation<StudentDashboardNavigationProp>();
     const [internships, setInternships] = useState<InternshipMatch[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [aiMatching, setAiMatching] = useState(false);
+    const [appliedInternships, setAppliedInternships] = useState<string[]>([]);
 
     useEffect(() => {
         loadInternships();
@@ -139,6 +147,32 @@ export const StudentDashboard: FC = () => {
             case 'hybrid': return 'briefcase';
             default: return 'briefcase';
         }
+    };
+
+    const handleApplyInternship = (internshipId: string, internshipTitle: string) => {
+        if (appliedInternships.includes(internshipId)) return;
+
+        Alert.alert(
+            'Apply for Internship',
+            `Are you sure you want to apply for ${internshipTitle}?`,
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel'
+                },
+                {
+                    text: 'Apply',
+                    onPress: () => {
+                        setAppliedInternships(prev => [...prev, internshipId]);
+                        Alert.alert(
+                            'Application Submitted!',
+                            'Your application has been submitted successfully. The recruiter will review it and get back to you soon.',
+                            [{ text: 'OK' }]
+                        );
+                    }
+                }
+            ]
+        );
     };
 
     const InternshipCard = ({ internship }: { internship: InternshipMatch }) => (
@@ -193,9 +227,25 @@ export const StudentDashboard: FC = () => {
                 </View>
             </View>
 
-            <TouchableOpacity style={styles.applyButton}>
-                <Text style={styles.applyButtonText}>Apply Now</Text>
-                <Icon name="arrow-right" size={16} color="#fff" />
+            <TouchableOpacity
+                style={[
+                    styles.applyButton,
+                    appliedInternships.includes(internship.id) && styles.appliedButton
+                ]}
+                onPress={() => handleApplyInternship(internship.id, internship.title)}
+                disabled={appliedInternships.includes(internship.id)}
+            >
+                <Text style={[
+                    styles.applyButtonText,
+                    appliedInternships.includes(internship.id) && styles.appliedButtonText
+                ]}>
+                    {appliedInternships.includes(internship.id) ? 'Applied' : 'Apply Now'}
+                </Text>
+                <Icon
+                    name={appliedInternships.includes(internship.id) ? 'check' : 'arrow-right'}
+                    size={16}
+                    color={appliedInternships.includes(internship.id) ? '#10b981' : '#fff'}
+                />
             </TouchableOpacity>
         </TouchableOpacity>
     );
@@ -229,67 +279,110 @@ export const StudentDashboard: FC = () => {
                     <Text style={styles.welcomeText}>Welcome back,</Text>
                     <Text style={styles.userName}>{user?.firstName}! 👋</Text>
                 </View>
-                <TouchableOpacity style={styles.profileButton} onPress={logout}>
-                    <Icon name="user-circle" size={32} color="#3b82f6" />
-                </TouchableOpacity>
-            </View>
-
-            {/* Stats Cards */}
-            <View style={styles.statsContainer} >
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-
-
-                >
-                    <View style={styles.statCard}>
-                        <Icon name="briefcase" size={24} color="#3b82f6" />
-                        <Text style={styles.statNumber}>12</Text>
-                        <Text style={styles.statLabel}>Applications</Text>
-                    </View>
-                    <View style={styles.statCard}>
-                        <Icon name="clock-o" size={24} color="#10b981" />
-                        <Text style={styles.statNumber}>3</Text>
-                        <Text style={styles.statLabel}>Interviews</Text>
-                    </View>
-                    <View style={styles.statCard}>
-                        <Icon name="star" size={24} color="#f59e0b" />
-                        <Text style={styles.statNumber}>8.5</Text>
-                        <Text style={styles.statLabel}>Profile Score</Text>
-                    </View>
-                    <View style={styles.statCard}>
-                        <Icon name="line-chart" size={24} color="#8b5cf6" />
-                        <Text style={styles.statNumber}>95%</Text>
-                        <Text style={styles.statLabel}>Match Rate</Text>
-                    </View>
-                </ScrollView>
-            </View>
-
-            {/* Recommended Internships */}
-            <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Recommended for You</Text>
-                <TouchableOpacity onPress={() => loadInternships(true)}>
-                    <Icon name="refresh" size={24} color="#3b82f6" />
+                <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+                    <Icon name="sign-out" size={28} color="#ef4444" />
                 </TouchableOpacity>
             </View>
 
             <ScrollView
-                style={styles.internshipsList}
+                style={styles.scrollContainer}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
                 }
                 showsVerticalScrollIndicator={false}
             >
-                {loading ? (
-                    <View style={styles.loadingContainer}>
-                        <ActivityIndicator size="large" color="#3b82f6" />
-                        <Text style={styles.loadingText}>Loading internships...</Text>
+                {/* AI Match Score USP Banner */}
+                <View style={styles.uspBanner}>
+                    <View style={styles.uspContent}>
+                        <Icon name="magic" size={24} color="#fff" />
+                        <Text style={styles.uspTitle}>AI-Powered Matching</Text>
                     </View>
-                ) : (
-                    internships.map((internship) => (
-                        <InternshipCard key={internship.id} internship={internship} />
-                    ))
-                )}
+                    <Text style={styles.uspSubtitle}>
+                        Our smart algorithm analyzes your profile and finds the perfect internship matches
+                    </Text>
+                </View>
+
+                {/* Stats Cards */}
+                <View style={styles.statsContainer}>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                    >
+                        <View style={styles.statCard}>
+                            <Icon name="briefcase" size={24} color="#3b82f6" />
+                            <Text style={styles.statNumber}>12</Text>
+                            <Text style={styles.statLabel}>Applications</Text>
+                        </View>
+                        <View style={styles.statCard}>
+                            <Icon name="clock-o" size={24} color="#10b981" />
+                            <Text style={styles.statNumber}>3</Text>
+                            <Text style={styles.statLabel}>Interviews</Text>
+                        </View>
+                        <View style={styles.statCard}>
+                            <Icon name="star" size={24} color="#f59e0b" />
+                            <Text style={styles.statNumber}>8.5</Text>
+                            <Text style={styles.statLabel}>Profile Score</Text>
+                        </View>
+                        <View style={styles.statCard}>
+                            <Icon name="line-chart" size={24} color="#8b5cf6" />
+                            <Text style={styles.statNumber}>95%</Text>
+                            <Text style={styles.statLabel}>Match Rate</Text>
+                        </View>
+                    </ScrollView>
+                </View>
+
+                {/* Quick Actions */}
+                <View style={styles.quickActions}>
+                    <TouchableOpacity
+                        style={styles.quickActionButton}
+                        onPress={() => navigation.navigate('Browse')}
+                    >
+                        <Icon name="search" size={24} color="#3b82f6" />
+                        <Text style={styles.quickActionText}>Browse</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.quickActionButton}
+                        onPress={() => navigation.navigate('Resume')}
+                    >
+                        <Icon name="file-text-o" size={24} color="#10b981" />
+                        <Text style={styles.quickActionText}>Resume</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.quickActionButton}
+                        onPress={() => navigation.navigate('AttendanceTracking')}
+                    >
+                        <Icon name="calendar-check-o" size={24} color="#f59e0b" />
+                        <Text style={styles.quickActionText}>Attendance</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.quickActionButton}
+                        onPress={() => navigation.navigate('Messages')}
+                    >
+                        <Icon name="comments-o" size={24} color="#8b5cf6" />
+                        <Text style={styles.quickActionText}>Messages</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Recommended Internships */}
+                <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>Recommended for You</Text>
+                    <TouchableOpacity onPress={() => loadInternships(true)}>
+                        <Icon name="refresh" size={24} color="#3b82f6" />
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.internshipsContainer}>
+                    {loading ? (
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator size="large" color="#3b82f6" />
+                            <Text style={styles.loadingText}>Loading internships...</Text>
+                        </View>
+                    ) : (
+                        internships.map((internship) => (
+                            <InternshipCard key={internship.id} internship={internship} />
+                        ))
+                    )}
+                </View>
                 <View style={styles.bottomPadding} />
             </ScrollView>
         </View>
@@ -322,8 +415,12 @@ const styles = StyleSheet.create({
         color: '#1e293b',
         marginTop: 4,
     },
-    profileButton: {
-        padding: 4,
+    logoutButton: {
+        padding: 8,
+        borderRadius: 8,
+        backgroundColor: '#fef2f2',
+        borderWidth: 1,
+        borderColor: '#fee2e2',
     },
     statsContainer: {
         flexDirection: 'row',
@@ -369,8 +466,10 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: '#1e293b',
     },
-    internshipsList: {
+    scrollContainer: {
         flex: 1,
+    },
+    internshipsContainer: {
         paddingHorizontal: 20,
     },
     internshipCard: {
@@ -483,10 +582,18 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         gap: 8,
     },
+    appliedButton: {
+        backgroundColor: '#f0f9ff',
+        borderWidth: 1,
+        borderColor: '#10b981',
+    },
     applyButtonText: {
         fontSize: 16,
         fontWeight: '600',
         color: '#fff',
+    },
+    appliedButtonText: {
+        color: '#10b981',
     },
     loadingContainer: {
         flex: 1,
@@ -535,5 +642,57 @@ const styles = StyleSheet.create({
     },
     bottomPadding: {
         height: 20,
+    },
+    uspBanner: {
+        backgroundColor: '#3b82f6',
+        marginHorizontal: 20,
+        marginTop: 16,
+        borderRadius: 16,
+        padding: 20,
+        shadowColor: '#3b82f6',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 8,
+    },
+    uspContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+        gap: 12,
+    },
+    uspTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#fff',
+    },
+    uspSubtitle: {
+        fontSize: 14,
+        color: '#dbeafe',
+        lineHeight: 20,
+    },
+    quickActions: {
+        flexDirection: 'row',
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        gap: 8,
+    },
+    quickActionButton: {
+        flex: 1,
+        backgroundColor: '#fff',
+        padding: 12,
+        borderRadius: 12,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        elevation: 2,
+        gap: 6,
+    },
+    quickActionText: {
+        fontSize: 11,
+        fontWeight: '600',
+        color: '#1e293b',
     },
 });
