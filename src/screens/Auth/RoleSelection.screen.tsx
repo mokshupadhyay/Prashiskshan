@@ -52,20 +52,6 @@ const roleOptions: RoleOption[] = [
         ]
     },
     {
-        id: 'mentor',
-        title: '🧑‍🏫 Mentor/Faculty',
-        subtitle: 'Guide & Supervise Students',
-        description: 'Support students through their internship journey and academic growth.',
-        icon: 'user',
-        color: '#10B981',
-        features: [
-            'Student progress monitoring',
-            'Feedback & evaluation system',
-            'Academic credit approval',
-            'Mentorship dashboard'
-        ]
-    },
-    {
         id: 'recruiter',
         title: '💼 Recruiter',
         subtitle: 'Find Top Talent',
@@ -77,6 +63,20 @@ const roleOptions: RoleOption[] = [
             'Skill-based candidate filtering',
             'Interview & hiring tools',
             'Performance tracking'
+        ]
+    },
+    {
+        id: 'mentor',
+        title: '🧑‍🏫 Mentor/Faculty',
+        subtitle: 'Guide & Supervise Students',
+        description: 'Support students through their internship journey and academic growth.',
+        icon: 'user',
+        color: '#10B981',
+        features: [
+            'Student progress monitoring',
+            'Feedback & evaluation system',
+            'Academic credit approval',
+            'Mentorship dashboard'
         ]
     }
 ];
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
         color: '#64748b',
         textAlign: 'center',
         lineHeight: 22,
-        marginBottom: 32,
+        marginBottom: 12,
         paddingHorizontal: 16,
     },
     rolesContainer: {
@@ -211,7 +211,8 @@ const styles = StyleSheet.create({
     roleCard: {
         backgroundColor: '#fff',
         borderRadius: 16,
-        padding: 24,
+        paddingHorizontal: 25,
+        paddingVertical: 15,
         borderWidth: 2,
         shadowColor: '#000',
         shadowOffset: {
