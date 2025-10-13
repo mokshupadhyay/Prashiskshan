@@ -162,7 +162,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 24,
-        marginVertical: 32,
+        marginBottom: 42,
+        marginTop: 46,
     },
     textWrapper: {
         flexShrink: 1,
@@ -182,7 +183,8 @@ const styles = StyleSheet.create({
     },
     buttonsWrapper: {
         marginHorizontal: 24,
-        marginTop: 12,
+        marginTop: 30,
+        marginBottom: 40,
     },
     button: {
         borderRadius: 6,
