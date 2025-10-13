@@ -542,6 +542,8 @@
 
 
 // VendorForge Professional Logo Icon (Monogram VF)
+
+
 import React from 'react';
 import Svg, { Path, Rect, Defs, LinearGradient, Stop } from 'react-native-svg';
 
